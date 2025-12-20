@@ -86,10 +86,16 @@ export function BookingForm({ barbers, services }: BookingFormProps) {
       return
     }
 
+    // Format date to YYYY-MM-DD in local timezone
+    const year = selectedDate.getFullYear()
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+    const day = String(selectedDate.getDate()).padStart(2, '0')
+    const localDateString = `${year}-${month}-${day}`
+
     const formData = {
       barberId: selectedBarber,
       serviceId: selectedService,
-      date: selectedDate.toISOString().split('T')[0],
+      date: localDateString,
       time: selectedTime,
       customerName: customerInfo.name,
       customerEmail: customerInfo.email,
@@ -249,7 +255,7 @@ export function BookingForm({ barbers, services }: BookingFormProps) {
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
                       <Icon className="w-6 h-6 text-accent" />
                     </div>
                     <div className="flex-1">
@@ -324,7 +330,7 @@ export function BookingForm({ barbers, services }: BookingFormProps) {
                           ? "bg-accent hover:bg-accent/90 text-accent-foreground font-bold"
                           : isAvailable
                             ? "border-border hover:border-accent font-bold"
-                            : "border-border opacity-50 cursor-not-allowed font-bold decoration-slice line-through"
+                            : "border-border opacity-50 cursor-not-allowed font-bold box-decoration-slice line-through"
                       }
                     >
                       {time}

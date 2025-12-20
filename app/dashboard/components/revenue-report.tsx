@@ -56,9 +56,9 @@ export function RevenueReport({ trigger }: RevenueReportProps) {
           </Card>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[98vw]! w-[98vw]! max-h-[98vh] overflow-y-auto p-8">
         <DialogHeader>
-          <DialogTitle>Revenue Report</DialogTitle>
+          <DialogTitle className="text-3xl">Revenue Report</DialogTitle>
         </DialogHeader>
 
         <div className="flex gap-4 mb-6">
@@ -120,7 +120,7 @@ export function RevenueReport({ trigger }: RevenueReportProps) {
                     const maxRevenue = Math.max(...stats.dailyRevenueChart.map((d: any) => d.amount), 100)
                     const heightPercentage = (day.amount / maxRevenue) * 100
                     return (
-                      <div key={day.date} className="flex-1 min-w-[20px] flex flex-col items-center group relative">
+                      <div key={day.date} className="flex-1 min-w-5 flex flex-col items-center group relative">
                         <div 
                           className="w-full bg-primary/80 hover:bg-primary transition-all rounded-t-sm"
                           style={{ height: `${Math.max(heightPercentage, 2)}%` }}

@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Calendar } from "lucide-react"
+import { Users, Calendar, Search } from "lucide-react"
 import { getAllBookings } from "@/app/dashboard/actions"
 import { format } from "date-fns"
 
@@ -14,6 +15,7 @@ export function BookingsList() {
   const [open, setOpen] = useState(false)
   const [bookings, setBookings] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => {
     if (open) {
@@ -47,6 +49,16 @@ export function BookingsList() {
           <DialogTitle>All Bookings</DialogTitle>
         </DialogHeader>
 
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by customer name, email, barber, or service..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
         {loading ? (
           <div className="py-8 text-center">Loading bookings...</div>
         ) : (
@@ -63,7 +75,16 @@ export function BookingsList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {bookings.map((booking) => (
+              {bookings.filter((booking) => {
+                if (!searchQuery) return true
+                const query = searchQuery.toLowerCase()
+                return (
+                  booking.customer_name?.toLowerCase().includes(query) ||
+                  booking.customer_email?.toLowerCase().includes(query) ||
+                  booking.barbers?.name?.toLowerCase().includes(query) ||
+                  booking.services?.name?.toLowerCase().includes(query)
+                )
+              }).map((booking) => (
                 <TableRow key={booking.id}>
                   <TableCell>{format(new Date(booking.booking_date), 'MMM d, yyyy')}</TableCell>
                   <TableCell>{booking.booking_time}</TableCell>

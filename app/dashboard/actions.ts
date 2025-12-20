@@ -153,7 +153,7 @@ export async function getAllBookings() {
     .select(`
       *,
       barbers (name),
-      services (name, price)
+      services (name, price, duration)
     `)
     .order('booking_date', { ascending: false })
     .order('booking_time', { ascending: true })
@@ -275,6 +275,123 @@ export async function deleteService(id: number) {
   const { error } = await supabase.from('services').delete().eq('id', id)
 
   if (error) return { success: false, error: error.message }
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+// --- Booking Management (Admin) ---
+
+export async function createBooking(data: any) {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
+  
+  // Ensure the data has the correct structure for database insertion
+  const bookingData = {
+    barber_id: parseInt(data.barber_id),
+    service_id: parseInt(data.service_id),
+    booking_date: data.booking_date,
+    booking_time: data.booking_time,
+    customer_name: data.customer_name,
+    customer_email: data.customer_email,
+    customer_phone: data.customer_phone,
+    status: data.status || 'confirmed',
+    notes: data.notes || null
+  }
+
+  const { error } = await supabase.from('bookings').insert([bookingData])
+
+  if (error) {
+    console.error("Booking creation error:", error)
+    return { success: false, error: error.message }
+  }
+  
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+export async function updateBooking(id: number, data: any) {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
+  
+  // Ensure the data has the correct structure for database update
+  const bookingData = {
+    barber_id: parseInt(data.barber_id),
+    service_id: parseInt(data.service_id),
+    booking_date: data.booking_date,
+    booking_time: data.booking_time,
+    customer_name: data.customer_name,
+    customer_email: data.customer_email,
+    customer_phone: data.customer_phone,
+    status: data.status || 'confirmed',
+    notes: data.notes || null
+  }
+  
+  const { error } = await supabase.from('bookings').update(bookingData).eq('id', id)
+
+  if (error) {
+    console.error("Booking update error:", error)
+    return { success: false, error: error.message }
+  }
+  
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+export async function deleteBooking(id: number) {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
+  
+  const { error } = await supabase.from('bookings').delete().eq('id', id)
+
+  if (error) {
+    console.error("Booking deletion error:", error)
+    return { success: false, error: error.message }
+  }
+  
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+export async function getOrders() {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      order_items (
+        *,
+        products (
+          name,
+          image_url
+        )
+      )
+    `)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching orders:', error)
+    return []
+  }
+
+  return data
+}
+
+export async function updateOrderStatus(orderId: string, status: string) {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
+
+  const { error } = await supabase
+    .from('orders')
+    .update({ status })
+    .eq('id', orderId)
+
+  if (error) {
+    console.error('Error updating order status:', error)
+    return { success: false, error: error.message }
+  }
+
   revalidatePath('/dashboard')
   return { success: true }
 }

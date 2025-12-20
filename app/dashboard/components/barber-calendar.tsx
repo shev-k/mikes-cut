@@ -179,7 +179,7 @@ export function BarberCalendar({ bookings }: BarberCalendarProps) {
                 ))}
               </div>
               {timeSlots.map((hour) => (
-                <div key={hour} className="grid grid-cols-8 border-b last:border-0 min-h-[80px]">
+                <div key={hour} className="grid grid-cols-8 border-b last:border-0 min-h-20">
                   <div className="p-2 border-r text-xs text-muted-foreground font-medium flex items-center justify-center bg-muted/10">
                     {format(setHours(new Date(), hour), "h a")}
                   </div>

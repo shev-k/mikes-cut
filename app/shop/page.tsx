@@ -2,8 +2,14 @@ import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { ProductGrid } from "@/components/product-grid"
 import { ShoppingBag } from "lucide-react"
+import { getProducts, getCategories } from "./actions"
 
-export default function ShopPage() {
+export default async function ShopPage() {
+  const [products, categories] = await Promise.all([
+    getProducts(),
+    getCategories()
+  ])
+
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -40,7 +46,7 @@ export default function ShopPage() {
       {/* Products Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <ProductGrid />
+          <ProductGrid products={products} categories={categories} />
         </div>
       </section>
 

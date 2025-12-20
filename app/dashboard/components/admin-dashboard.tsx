@@ -9,6 +9,9 @@ import { RevenueReport } from "./revenue-report"
 import { BarberManagement } from "./barber-management"
 import { BookingsList } from "./bookings-list"
 import { ServiceManagement } from "./service-management"
+import { ProductManagement } from "./product-management"
+import { AdminCalendar } from "./admin-calendar"
+import { OrdersManagement } from "./orders-management"
 
 interface AdminStats {
   totalRevenue: number
@@ -91,12 +94,24 @@ export function AdminDashboard() {
         {/* 4. Total Bookings (Clickable -> List) */}
         <BookingsList />
 
-        {/* 5. Manage Barbers (Clickable -> Dialog) */}
+        {/* 5. Shop Orders (Clickable -> Dialog) */}
+        <OrdersManagement />
+
+        {/* 6. Manage Barbers (Clickable -> Dialog) */}
         <BarberManagement />
 
-        {/* 6. Manage Services (Clickable -> Dialog) */}
+        {/* 7. Manage Services (Clickable -> Dialog) */}
         <ServiceManagement />
 
+        {/* 7. Manage Products (Clickable -> Dialog) */}
+        <ProductManagement />
+
+      </div>
+
+      {/* Booking Calendar */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold tracking-tight mb-4">Booking Calendar</h2>
+        <AdminCalendar />
       </div>
     </div>
   )

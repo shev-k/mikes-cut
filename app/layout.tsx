@@ -2,6 +2,9 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Bebas_Neue, Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { Toaster } from "@/components/ui/sonner"
+import { CartProvider } from "@/components/cart-provider"
+// @ts-ignore
 import "./globals.css"
 
 const bebasNeue = Bebas_Neue({
@@ -28,7 +31,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${bebasNeue.variable} ${inter.variable} font-sans antialiased`}>
-        {children}
+        <CartProvider>
+          {children}
+          <Toaster />
+        </CartProvider>
         <Analytics />
       </body>
     </html>

@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
+import { CartSheet } from "@/components/cart-sheet"
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
@@ -38,6 +39,7 @@ export function Navigation() {
             <Link href="/shop" className="text-foreground hover:text-primary transition-colors text-lg tracking-wide">
               SHOP
             </Link>
+            <CartSheet />
             <Button
               asChild
               size="lg"
@@ -48,9 +50,12 @@ export function Navigation() {
           </div>
 
           {/* Mobile Menu Button */}
-          <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-foreground" aria-label="Toggle menu">
-            {isOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
+          <div className="md:hidden flex items-center gap-4">
+            <CartSheet />
+            <button onClick={() => setIsOpen(!isOpen)} className="text-foreground" aria-label="Toggle menu">
+              {isOpen ? <X size={28} /> : <Menu size={28} />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
