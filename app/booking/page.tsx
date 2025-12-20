@@ -1,8 +1,12 @@
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { BookingForm } from "@/components/booking-form"
+import { getBarbers, getServices } from "./actions"
 
-export default function BookingPage() {
+export default async function BookingPage() {
+  const barbers = await getBarbers()
+  const services = await getServices()
+
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -36,7 +40,7 @@ export default function BookingPage() {
       {/* Booking Form Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <BookingForm />
+          <BookingForm barbers={barbers} services={services} />
         </div>
       </section>
 

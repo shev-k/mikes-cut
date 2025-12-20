@@ -9,68 +9,9 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Calendar } from "@/components/ui/calendar"
 import { Scissors, Axe, Flame, Check } from "lucide-react"
-
-const barbers = [
-  {
-    id: "mike",
-    name: 'MIKE "THE BLADE"',
-    title: "Founder & Master Barber",
-    image: "/tough-bearded-barber-with-tattoos-holding-straight.jpg",
-  },
-  {
-    id: "razor",
-    name: "RAZOR RODRIGUEZ",
-    title: "Senior Barber",
-    image: "/hispanic-barber-with-tattoos-and-beard-in-dark-bar.jpg",
-  },
-  {
-    id: "steel",
-    name: "STEEL THOMPSON",
-    title: "Master Stylist",
-    image: "/muscular-bald-barber-with-tattoos-in-dark-barbersh.jpg",
-  },
-  {
-    id: "blaze",
-    name: "BLAZE MARTINEZ",
-    title: "Traditional Specialist",
-    image: "/young-latino-barber-with-styled-hair-and-tattoos-i.jpg",
-  },
-]
-
-const services = [
-  {
-    id: "knife-cut",
-    name: "KNIFE CUT",
-    price: "$45",
-    duration: "45 min",
-    icon: Scissors,
-    description: "Precision cutting with traditional straight razors",
-  },
-  {
-    id: "axe-styling",
-    name: "AXE STYLING",
-    price: "$65",
-    duration: "60 min",
-    icon: Axe,
-    description: "Our signature technique for the brave",
-  },
-  {
-    id: "hot-towel-shave",
-    name: "HOT TOWEL SHAVE",
-    price: "$40",
-    duration: "30 min",
-    icon: Flame,
-    description: "Traditional hot towel treatment and close shave",
-  },
-  {
-    id: "full-service",
-    name: "FULL SERVICE",
-    price: "$95",
-    duration: "90 min",
-    icon: Check,
-    description: "Complete grooming experience with cut and shave",
-  },
-]
+import { createBooking, getUnavailableSlots } from "@/app/booking/actions"
+import { toast } from "sonner"
+import { useEffect } from "react"
 
 const timeSlots = [
   "9:00 AM",
@@ -85,10 +26,15 @@ const timeSlots = [
   "6:00 PM",
 ]
 
-export function BookingForm() {
+interface BookingFormProps {
+  barbers: any[]
+  services: any[]
+}
+
+export function BookingForm({ barbers, services }: BookingFormProps) {
   const [step, setStep] = useState(1)
-  const [selectedBarber, setSelectedBarber] = useState<string | null>(null)
-  const [selectedService, setSelectedService] = useState<string | null>(null)
+  const [selectedBarber, setSelectedBarber] = useState<number | null>(null)
+  const [selectedService, setSelectedService] = useState<number | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
   const [customerInfo, setCustomerInfo] = useState({
@@ -97,10 +43,76 @@ export function BookingForm() {
     phone: "",
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [unavailableSlots, setUnavailableSlots] = useState<string[]>([])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    async function fetchUnavailableSlots() {
+      if (selectedBarber && selectedDate) {
+        // Adjust date to local timezone string YYYY-MM-DD
+        const offset = selectedDate.getTimezoneOffset()
+        const date = new Date(selectedDate.getTime() - (offset*60*1000))
+        const dateStr = date.toISOString().split('T')[0]
+        
+        const slots = await getUnavailableSlots(selectedBarber, dateStr)
+        setUnavailableSlots(slots)
+      } else {
+        setUnavailableSlots([])
+      }
+    }
+    fetchUnavailableSlots()
+  }, [selectedBarber, selectedDate])
+
+  const isSlotAvailable = (timeSlot: string) => {
+    const [timePart, modifier] = timeSlot.split(' ')
+    let [hours, minutes] = timePart.split(':')
+    let h = parseInt(hours, 10)
+    if (modifier === 'PM' && h !== 12) {
+      h += 12
+    } else if (modifier === 'AM' && h === 12) {
+      h = 0
+    }
+    const formattedTime = `${h.toString().padStart(2, '0')}:${minutes}:00`
+    return !unavailableSlots.includes(formattedTime)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitted(true)
+    setIsSubmitting(true)
+
+    if (!selectedBarber || !selectedService || !selectedDate || !selectedTime) {
+      toast.error("Please fill in all fields")
+      setIsSubmitting(false)
+      return
+    }
+
+    const formData = {
+      barberId: selectedBarber,
+      serviceId: selectedService,
+      date: selectedDate.toISOString().split('T')[0],
+      time: selectedTime,
+      customerName: customerInfo.name,
+      customerEmail: customerInfo.email,
+      customerPhone: customerInfo.phone
+    }
+
+    const result = await createBooking(formData)
+
+    if (result.success) {
+      setIsSubmitted(true)
+      toast.success("Booking confirmed!")
+    } else {
+      toast.error("Failed to create booking: " + result.error)
+    }
+    setIsSubmitting(false)
+  }
+
+  const getServiceIcon = (serviceName: string) => {
+    const name = serviceName.toLowerCase()
+    if (name.includes('shave')) return Flame
+    if (name.includes('axe')) return Axe
+    if (name.includes('cut')) return Scissors
+    return Check
   }
 
   if (isSubmitted) {
@@ -188,7 +200,7 @@ export function BookingForm() {
               >
                 <div className="relative h-64">
                   <img
-                    src={barber.image || "/placeholder.svg"}
+                    src={barber.image_url || "/placeholder.svg"}
                     alt={barber.name}
                     className="w-full h-full object-cover"
                   />
@@ -225,7 +237,7 @@ export function BookingForm() {
           <h2 className="text-4xl font-bold tracking-wider text-primary mb-8 text-center">CHOOSE YOUR SERVICE</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {services.map((service) => {
-              const Icon = service.icon
+              const Icon = getServiceIcon(service.name)
               return (
                 <Card
                   key={service.id}
@@ -252,8 +264,8 @@ export function BookingForm() {
                         {service.description}
                       </p>
                       <div className="flex items-center gap-4 text-sm">
-                        <span className="text-accent font-bold text-lg">{service.price}</span>
-                        <span className="text-muted-foreground">{service.duration}</span>
+                        <span className="text-accent font-bold text-lg">${service.price}</span>
+                        <span className="text-muted-foreground">{service.duration_minutes} min</span>
                       </div>
                     </div>
                   </div>
@@ -299,20 +311,26 @@ export function BookingForm() {
             <Card className="p-6 bg-card border-border">
               <h3 className="text-xl font-bold tracking-wide text-foreground mb-4">SELECT TIME</h3>
               <div className="grid grid-cols-2 gap-3">
-                {timeSlots.map((time) => (
-                  <Button
-                    key={time}
-                    onClick={() => setSelectedTime(time)}
-                    variant={selectedTime === time ? "default" : "outline"}
-                    className={
-                      selectedTime === time
-                        ? "bg-accent hover:bg-accent/90 text-accent-foreground font-bold"
-                        : "border-border hover:border-accent font-bold"
-                    }
-                  >
-                    {time}
-                  </Button>
-                ))}
+                {timeSlots.map((time) => {
+                  const isAvailable = isSlotAvailable(time)
+                  return (
+                    <Button
+                      key={time}
+                      onClick={() => isAvailable && setSelectedTime(time)}
+                      disabled={!isAvailable}
+                      variant={selectedTime === time ? "default" : "outline"}
+                      className={
+                        selectedTime === time
+                          ? "bg-accent hover:bg-accent/90 text-accent-foreground font-bold"
+                          : isAvailable
+                            ? "border-border hover:border-accent font-bold"
+                            : "border-border opacity-50 cursor-not-allowed font-bold decoration-slice line-through"
+                      }
+                    >
+                      {time}
+                    </Button>
+                  )
+                })}
               </div>
             </Card>
           </div>
@@ -412,7 +430,7 @@ export function BookingForm() {
                   <div className="flex justify-between pt-3 border-t border-border">
                     <span className="text-foreground font-bold">Total:</span>
                     <span className="text-accent font-bold text-lg">
-                      {services.find((s) => s.id === selectedService)?.price}
+                      ${services.find((s) => s.id === selectedService)?.price}
                     </span>
                   </div>
                 </div>
@@ -429,9 +447,10 @@ export function BookingForm() {
                 </Button>
                 <Button
                   type="submit"
+                  disabled={isSubmitting}
                   className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-bold tracking-wide"
                 >
-                  CONFIRM BOOKING
+                  {isSubmitting ? "CONFIRMING..." : "CONFIRM BOOKING"}
                 </Button>
               </div>
             </form>
