@@ -61,7 +61,7 @@
 
 1.  **Clone**
     ```bash
-    git clone [https://github.com/your-username/mikes-cut.git](https://github.com/shev-k/mikes-cut/)
+    git clone https://github.com/shev-k/mikes-cut/
     cd mikes-cut
     ```
 
