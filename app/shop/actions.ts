@@ -219,10 +219,13 @@ export async function createOrder(orderData: {
   // Get current user if logged in
   const { data: { user } } = await supabase.auth.getUser()
 
-  // 1. Create Order
-  const { data: order, error: orderError } = await supabase
+  // 1. Create Order with client-side ID to avoid RLS Select restrictions
+  const orderId = crypto.randomUUID()
+  
+  const { error: orderError } = await supabase
     .from('orders')
     .insert({
+      id: orderId,
       user_id: user?.id || null,
       customer_name: orderData.customer_name,
       customer_email: orderData.customer_email,
@@ -232,8 +235,6 @@ export async function createOrder(orderData: {
       status: 'pending',
       payment_method: 'cash_on_delivery'
     })
-    .select()
-    .single()
 
   if (orderError) {
     console.error('Error creating order:', orderError)
@@ -242,7 +243,7 @@ export async function createOrder(orderData: {
 
   // 2. Create Order Items
   const orderItems = orderData.items.map(item => ({
-    order_id: order.id,
+    order_id: orderId,
     product_id: item.id,
     quantity: item.quantity,
     price_at_time: item.price
@@ -258,5 +259,5 @@ export async function createOrder(orderData: {
   }
 
   revalidatePath('/dashboard')
-  return { success: true, orderId: order.id }
+  return { success: true, orderId: orderId }
 }

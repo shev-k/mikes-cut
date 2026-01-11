@@ -1,11 +1,20 @@
-import { Resend } from 'resend'
+// import { Resend } from 'resend'
+
+// Mock Resend client to disable emails
+const resend = {
+  emails: {
+    send: async () => ({ data: { id: 'mock' }, error: null })
+  }
+}
 
 // Initialize Resend client
+/*
 if (!process.env.RESEND_API_KEY) {
   console.warn('RESEND_API_KEY is not set. Email sending will be disabled.')
 }
 
 const resend = new Resend(process.env.RESEND_API_KEY)
+*/
 
 // Email sender configuration
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Mike\'s Cut <bookings@mikescut.com>'
@@ -28,6 +37,10 @@ export async function sendBookingConfirmation({
   bookingTime: string
   price: number
 }) {
+  console.log('Email sending is DISABLED. Mocking success for booking confirmation.')
+  return { success: true, data: { id: 'mock-id' } }
+
+  /*
   if (!process.env.RESEND_API_KEY) {
     console.warn('RESEND_API_KEY not configured. Skipping email.')
     return { success: false, error: 'API key not configured' }
@@ -126,6 +139,7 @@ export async function sendBookingConfirmation({
     console.error('Error sending booking confirmation email:', error)
     return { success: false, error }
   }
+  */
 }
 
 // Send booking reminder email (for future use)
@@ -144,6 +158,9 @@ export async function sendBookingReminder({
   bookingDate: string
   bookingTime: string
 }) {
+  console.log('Email sending is DISABLED. Mocking success for reminder.')
+  return { success: true, data: { id: 'mock-id' } }
+  /*
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
@@ -194,6 +211,7 @@ export async function sendBookingReminder({
     console.error('Error sending reminder email:', error)
     return { success: false, error }
   }
+  */
 }
 
 export default resend

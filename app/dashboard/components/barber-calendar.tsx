@@ -40,7 +40,7 @@ export function BarberCalendar({ bookings }: BarberCalendarProps) {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const timeSlots = Array.from({ length: 13 }, (_, i) => i + 9) // 9 AM to 9 PM
+  const timeSlots = Array.from({ length: 15 }, (_, i) => i + 8) // 8 AM to 10 PM
 
   const navigate = (direction: "prev" | "next") => {
     if (viewMode === "day") {
@@ -56,24 +56,32 @@ export function BarberCalendar({ bookings }: BarberCalendarProps) {
   })
 
   const getBookingsForSlot = (date: Date, hour: number) => {
+    if (!bookings) return []
+    
     return bookings.filter((booking) => {
-      const bookingDate = parseISO(booking.booking_date)
+      if (!booking || !booking.booking_date) return false
+
+      // Normalize date comparison: YYYY-MM-DD
+      const slotDateStr = format(date, 'yyyy-MM-dd')
+      // If booking.booking_date is ISO with time, take first 10 chars
+      const bookingDateStr = booking.booking_date.substring(0, 10)
+      
+      if (bookingDateStr !== slotDateStr) return false
+
       const [bookingHour, bookingMinute] = booking.booking_time.split(":").map(Number)
       
-      // Check if booking is on the same day
-      if (!isSameDay(date, bookingDate)) return false
-
       // Check if booking starts in this hour
       if (bookingHour === hour) return true
 
-      // Check if booking spans across this hour
-      const duration = booking.services?.duration_minutes || 30
-      const bookingStart = setMinutes(setHours(bookingDate, bookingHour), bookingMinute)
+      // Duration fallback
+      // @ts-ignore - services.duration_minutes might be missing
+      const duration = booking.services?.duration_minutes || 45 
+      
+      const bookingStart = setMinutes(setHours(date, bookingHour), bookingMinute)
       const bookingEnd = addMinutes(bookingStart, duration)
       const slotStart = setMinutes(setHours(date, hour), 0)
-      const slotEnd = addMinutes(slotStart, 60)
-
-      return isWithinInterval(slotStart, { start: bookingStart, end: addMinutes(bookingEnd, -1) })
+      
+      return bookingStart < addMinutes(slotStart, 60) && bookingEnd > slotStart
     })
   }
 
@@ -195,16 +203,15 @@ export function BarberCalendar({ bookings }: BarberCalendarProps) {
                               setIsDialogOpen(true)
                             }}
                             className={cn(
-                              "p-1.5 rounded text-xs mb-1 cursor-pointer hover:opacity-80 transition-opacity",
+                              "p-1.5 rounded text-xs mb-1 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap overflow-hidden",
                               booking.status === "confirmed" 
-                                ? "bg-accent text-accent-foreground" 
-                                : "bg-secondary text-secondary-foreground"
+                                ? "bg-accent/80 text-accent-foreground border border-accent" 
+                                : "bg-secondary text-secondary-foreground border border-secondary"
                             )}
-                            title={`${booking.customer_name} - ${booking.services?.name}`}
+                            title={`${booking.booking_time} - ${booking.customer_name} (${booking.services?.name})`}
                           >
-                            <div className="font-bold truncate">{booking.booking_time.slice(0, 5)}</div>
-                            <div className="truncate">{booking.customer_name}</div>
-                          </div>
+                            <div className="font-bold">{booking.booking_time.slice(0, 5)}</div>
+                            <div className="truncate">{booking.customer_name}</div>                          <div className="text-[10px] opacity-75">{booking.services?.name}</div>                          </div>
                         ))}
                       </div>
                     )
@@ -240,7 +247,7 @@ export function BarberCalendar({ bookings }: BarberCalendarProps) {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <span className="font-bold text-right">Date:</span>
-                <span className="col-span-3">{format(parseISO(selectedBooking.booking_date), "MMMM d, yyyy")}</span>
+                <span className="col-span-3">{selectedBooking.booking_date}</span>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <span className="font-bold text-right">Time:</span>
