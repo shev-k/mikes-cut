@@ -4,7 +4,7 @@
 
   <p align="center">
     A modern, full-stack barbershop management system.<br />
-    <i>University Project for Software Engineering</i>
+    <i>University of Europer Project for Software Engineering 2</i>
   </p>
 
   <p align="center">
