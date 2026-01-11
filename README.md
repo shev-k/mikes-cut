@@ -91,5 +91,5 @@
 ---
 
 <p align="center">
-  Built with  by the Mike''s Cut Team
+  Built with ❤️ by the Mike''s Cut Team
 </p>
